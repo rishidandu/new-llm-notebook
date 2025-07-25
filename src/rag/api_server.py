@@ -99,8 +99,9 @@ def create_api_server() -> Flask:
                     'health': '/health',
                     'stats': '/stats',
                     'query': '/query',
+                    'sms_webhook': '/webhook/sms',
                     'whatsapp_webhook': '/webhook/whatsapp',
-                    'sms_webhook': '/webhook/sms'
+                    'whatsapp_alt': '/whatsapp'
                 }
             })
     
@@ -116,22 +117,23 @@ def create_api_server() -> Flask:
     
     @app.route('/webhook/whatsapp', methods=['POST'])
     def whatsapp_webhook():
-        """Twilio WhatsApp webhook endpoint."""
+        """Handle WhatsApp webhook from Twilio."""
         try:
-            # Log the webhook request for debugging
-            logger.info(f"📱 WhatsApp webhook received:")
-            logger.info(f"   Headers: {dict(request.headers)}")
-            logger.info(f"   Form data: {dict(request.form)}")
-            logger.info(f"   Body: {request.form.get('Body', 'No body')}")
-            logger.info(f"   From: {request.form.get('From', 'No from')}")
-            
             sms_handler = get_sms_handler()
-            response = sms_handler.handle_incoming_whatsapp()
-            logger.info(f"   Response type: {type(response).__name__}")
-            logger.info(f"   Response length: {len(response) if isinstance(response, str) else 'N/A'}")
-            return response
+            return sms_handler.handle_incoming_whatsapp()
         except Exception as e:
-            logger.error(f"   ❌ Error in WhatsApp webhook: {e}")
+            logger.error(f"Error in WhatsApp webhook: {e}")
+            return jsonify({'error': str(e)}), 500
+    
+    @app.route('/whatsapp', methods=['POST'])
+    def whatsapp_webhook_alt():
+        """Alternative WhatsApp webhook endpoint for Twilio compatibility."""
+        try:
+            logger.info(f"📱 WhatsApp webhook received at /whatsapp endpoint")
+            sms_handler = get_sms_handler()
+            return sms_handler.handle_incoming_whatsapp()
+        except Exception as e:
+            logger.error(f"Error in WhatsApp webhook (alt): {e}")
             return jsonify({'error': str(e)}), 500
     
     @app.route('/send/whatsapp', methods=['POST'])
