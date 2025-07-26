@@ -145,7 +145,7 @@ def process_single_file_turbo(file_info: Dict[str, Any], embedding_generator: Em
             return 0
         
         # TURBO: Generate embeddings in large batches
-        batch_size = 1000  # Much larger batches for maximum speed
+        batch_size = 500  # Reduced batch size for better stability
         embeddings = []
         enhanced_documents = []
         
@@ -192,7 +192,7 @@ def process_files_turbo(data_files: List[Dict[str, Any]], embedding_generator: E
     total_documents = 0
     
     # Use more workers for turbo processing
-    max_workers = min(100, len(data_files))  # Increased to 100 workers for optimal performance
+    max_workers = min(50, len(data_files))  # Reduced to 50 workers for better stability
     
     logger.info(f"🔄 Processing {len(data_files)} files with {max_workers} turbo workers...")
     
