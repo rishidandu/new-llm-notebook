@@ -6,9 +6,11 @@ Uses conversation context and quality scoring for better retrieval
 
 import sys
 import os
+from typing import List
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from src.utils.rag_optimized_processor import RAGOptimizedProcessor
+from src.utils.data_processor import Document
 from src.rag.embeddings import EmbeddingGenerator
 from src.rag.vector_store import VectorStore
 from config.settings import Config
@@ -32,11 +34,26 @@ def main():
     )
     
     embedding_generator = EmbeddingGenerator()
-    vector_store = VectorStore(config)
+    vector_store = VectorStore(config.COLLECTION_NAME, config.VECTOR_DB_DIR)
     
     # Get latest data files
-    reddit_files = processor._get_latest_files(config.REDDIT_RAW_DIR)
-    asu_files = processor._get_latest_files(config.ASU_RAW_DIR)
+    def get_latest_files(directory: str) -> List[str]:
+        """Get the most recent data files from a directory"""
+        if not os.path.exists(directory):
+            return []
+        
+        files = []
+        for filename in os.listdir(directory):
+            if filename.endswith('.jsonl'):
+                file_path = os.path.join(directory, filename)
+                files.append(file_path)
+        
+        # Sort by modification time (newest first)
+        files.sort(key=lambda x: os.path.getmtime(x), reverse=True)
+        return files
+    
+    reddit_files = get_latest_files(config.REDDIT_RAW_DIR)
+    asu_files = get_latest_files(config.ASU_RAW_DIR)
     
     print(f"📁 Found {len(reddit_files)} Reddit files and {len(asu_files)} ASU files")
     
@@ -55,22 +72,34 @@ def main():
         print(f"   📄 Generated {len(documents)} RAG-optimized documents")
         
         # Add to vector store with quality scoring
-        for doc in documents:
-            # Generate embedding
-            embedding = embedding_generator.get_embedding(doc.content)
+        if documents:
+            # Generate embeddings for all documents
+            embeddings = []
+            enhanced_documents = []
             
-            # Add with quality score in metadata
-            enhanced_metadata = {
-                **doc.metadata,
-                'quality_score': doc.quality_score,
-                'conversation_context': doc.conversation_context
-            }
+            for doc in documents:
+                # Generate embedding
+                embedding = embedding_generator.get_embedding(doc.content)
+                embeddings.append(embedding)
+                
+                # Add with quality score in metadata
+                enhanced_metadata = {
+                    **doc.metadata,
+                    'quality_score': doc.quality_score,
+                    'conversation_context': doc.conversation_context
+                }
+                
+                # Create enhanced document
+                enhanced_doc = Document(
+                    id=doc.id,
+                    content=doc.content,
+                    metadata=enhanced_metadata,
+                    source=doc.source
+                )
+                enhanced_documents.append(enhanced_doc)
             
-            vector_store.add_document(
-                content=doc.content,
-                metadata=enhanced_metadata,
-                embedding=embedding
-            )
+            # Add all documents at once
+            vector_store.add_documents(enhanced_documents, embeddings)
         
         total_documents += len(documents)
     
@@ -88,18 +117,19 @@ def main():
         documents = list(standard_processor.process_asu_data(file_path))
         print(f"   📄 Generated {len(documents)} documents")
         
-        for doc in documents:
-            embedding = embedding_generator.get_embedding(doc.content)
-            vector_store.add_document(
-                content=doc.content,
-                metadata=doc.metadata,
-                embedding=embedding
-            )
+        if documents:
+            # Generate embeddings for all documents
+            embeddings = []
+            for doc in documents:
+                embedding = embedding_generator.get_embedding(doc.content)
+                embeddings.append(embedding)
+            
+            # Add all documents at once
+            vector_store.add_documents(documents, embeddings)
         
         total_documents += len(documents)
     
-    # Save vector store
-    vector_store.save()
+    # Vector store is automatically persisted
     
     elapsed_time = time.time() - start_time
     print(f"✅ RAG system built successfully!")
