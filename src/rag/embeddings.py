@@ -24,11 +24,18 @@ class EmbeddingGenerator:
             return []
     
     def get_embeddings_batch(self, texts: List[str]) -> List[List[float]]:
-        """Get embeddings for multiple texts"""
-        embeddings = []
-        
-        for text in texts:
-            embedding = self.get_embedding(text)
-            embeddings.append(embedding)
-        
-        return embeddings 
+        """Get embeddings for multiple texts using batch API"""
+        try:
+            response = self.client.embeddings.create(
+                model=self.model,
+                input=texts
+            )
+            return [data.embedding for data in response.data]
+        except Exception as e:
+            self.logger.error(f"Error getting batch embeddings: {e}")
+            # Fallback to individual embeddings
+            embeddings = []
+            for text in texts:
+                embedding = self.get_embedding(text)
+                embeddings.append(embedding)
+            return embeddings 
