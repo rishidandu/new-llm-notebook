@@ -145,7 +145,7 @@ def process_single_file_turbo(file_info: Dict[str, Any], embedding_generator: Em
             return 0
         
         # TURBO: Generate embeddings in large batches
-        batch_size = 100  # Much larger batches
+        batch_size = 1000  # Much larger batches for maximum speed
         embeddings = []
         enhanced_documents = []
         
