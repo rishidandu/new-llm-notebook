@@ -14,6 +14,11 @@ class Config:
     REDDIT_CLIENT_SECRET = os.getenv("REDDIT_CLIENT_SECRET")
     REDDIT_USER_AGENT = os.getenv("REDDIT_USER_AGENT", "ASU-RAG-System/1.0")
     
+    # Qdrant Configuration
+    QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.d3YXRF1r12epzFORkWHzoAVtFhbpD8DipYTnKy6Hnws")
+    QDRANT_HOST = os.getenv("QDRANT_HOST", "https://your-cluster-url.qdrant.io")
+    QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
+    
     # Twilio SMS Configuration
     TWILIO_ACCOUNT_SID = os.getenv("TWILIO_ACCOUNT_SID")
     TWILIO_AUTH_TOKEN = os.getenv("TWILIO_AUTH_TOKEN")

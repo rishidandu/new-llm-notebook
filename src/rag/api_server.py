@@ -23,7 +23,7 @@ def get_rag_system():
     if _rag_system is None:
         logger.info("🔄 Initializing RAG system (lazy loading)...")
         _config = Config()
-        _rag_system = ASURAGSystem(_config)
+        _rag_system = ASURAGSystem(_config, vector_store_type="qdrant")
         logger.info("✅ RAG system initialized")
     return _rag_system
 

@@ -10,14 +10,27 @@ from config.settings import Config
 class QdrantStore:
     """Qdrant vector store implementation"""
     
-    def __init__(self, collection_name: str, host: str = "localhost", port: int = 6333):
+    def __init__(self, collection_name: str, host: str = None, port: int = None, api_key: str = None):
         self.collection_name = collection_name
-        self.host = host
-        self.port = port
         self.logger = logging.getLogger(__name__)
         
+        # Use config values if not provided
+        if host is None:
+            from config.settings import Config
+            config = Config()
+            host = config.QDRANT_HOST
+            port = config.QDRANT_PORT
+            api_key = config.QDRANT_API_KEY
+        
         # Initialize Qdrant client
-        self.client = QdrantClient(host=host, port=port)
+        if api_key and host.startswith('https://'):
+            # Cloud cluster
+            self.client = QdrantClient(url=host, api_key=api_key)
+            self.logger.info(f"Connected to Qdrant cloud cluster: {host}")
+        else:
+            # Local instance
+            self.client = QdrantClient(host=host, port=port)
+            self.logger.info(f"Connected to local Qdrant: {host}:{port}")
         
         # Create collection if it doesn't exist
         self._create_collection_if_not_exists()
