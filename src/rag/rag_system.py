@@ -8,12 +8,13 @@ from src.utils.asu_grades_processor import ASUGradesProcessor
 from src.rag.embeddings import EmbeddingGenerator
 from src.rag.llm import LLMGenerator
 from src.rag.vector_store import VectorStore
+from src.rag.qdrant_store import QdrantStore
 from src.rag.reranker import Reranker
 
 class ASURAGSystem:
     """Main RAG system orchestrator"""
     
-    def __init__(self, config: Config):
+    def __init__(self, config: Config, vector_store_type: str = "chroma"):
         self.config = config
         self.logger = logging.getLogger(__name__)
         
@@ -22,7 +23,15 @@ class ASURAGSystem:
         self.grades_processor = ASUGradesProcessor(config.CHUNK_SIZE, config.CHUNK_OVERLAP)
         self.embedding_gen = EmbeddingGenerator(config.EMBEDDING_MODEL)
         self.llm_gen = LLMGenerator(config.LLM_MODEL)
-        self.vector_store = VectorStore(config.COLLECTION_NAME, config.VECTOR_DB_DIR)
+        
+        # Initialize vector store based on type
+        if vector_store_type.lower() == "qdrant":
+            self.vector_store = QdrantStore(config.COLLECTION_NAME)
+            self.logger.info("Using Qdrant vector store")
+        else:
+            self.vector_store = VectorStore(config.COLLECTION_NAME, config.VECTOR_DB_DIR)
+            self.logger.info("Using ChromaDB vector store")
+        
         self.reranker = Reranker()  # Initialize reranker
     
     def ingest_data(self, data_sources: List[str]):
