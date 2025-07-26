@@ -192,7 +192,7 @@ def process_files_turbo(data_files: List[Dict[str, Any]], embedding_generator: E
     total_documents = 0
     
     # Use more workers for turbo processing
-    max_workers = min(16, len(data_files))  # Increased to 16 workers
+    max_workers = min(50, len(data_files))  # Increased to 50 workers
     
     logger.info(f"🔄 Processing {len(data_files)} files with {max_workers} turbo workers...")
     
