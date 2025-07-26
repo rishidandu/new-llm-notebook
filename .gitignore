@@ -185,12 +185,18 @@ logs/
 *.log.*
 
 # Data files that might be large or contain sensitive information
-data/raw/
+# Allow raw data files for RAG system
+!data/raw/
+!data/raw/reddit/
+!data/raw/asu_web/
+!data/raw/raw_asu_grades/
+!data/raw/reddit/*.jsonl
+!data/raw/asu_web/*.jsonl
+!data/raw/raw_asu_grades/*.csv
+
+# Exclude processed data and vector databases
 data/processed/
 data/vector_db/
-*.csv
-*.jsonl
-*.json
 *.pickle
 *.pkl
 *.bin
