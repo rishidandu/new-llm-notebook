@@ -7,6 +7,7 @@ from config.settings import Config
 from src.rag.rag_system import ASURAGSystem
 from src.rag.sms_handler import SMSHandler
 import logging
+import os
 
 # Configure logging
 logging.basicConfig(level=logging.INFO)
@@ -23,8 +24,12 @@ def get_rag_system():
     if _rag_system is None:
         logger.info("🔄 Initializing RAG system (lazy loading)...")
         _config = Config()
-        _rag_system = ASURAGSystem(_config, vector_store_type="qdrant")
-        logger.info("✅ RAG system initialized")
+        
+        # Use Qdrant in production (Render), ChromaDB locally
+        vector_store_type = "qdrant" if os.environ.get("RENDER") else "chroma"
+        
+        _rag_system = ASURAGSystem(_config, vector_store_type=vector_store_type)
+        logger.info(f"✅ RAG system initialized with {vector_store_type} store")
     return _rag_system
 
 def get_sms_handler():

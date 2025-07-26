@@ -1,130 +1,122 @@
-# ASU RAG System
+# LLM Notebook RAG System
 
-## 🚀 Features
-- **Reddit and ASU Web Scraping** (daily, historical, turbo modes)
-- **Efficient Data Deduplication**
-- **Context-rich Chunking for RAG**
-- **Parallel Embedding Generation**
-- **ChromaDB Vector Store Integration**
-- **Twilio SMS/WhatsApp Integration**
-- **Production-ready, Scalable**
+This project is a comprehensive RAG (Retrieval-Augmented Generation) system designed to answer questions about ASU, leveraging data from web scrapes, Reddit, and historical grade data. It features a Flask backend, a Next.js frontend, and uses ChromaDB for local development and Qdrant for production.
 
----
+## Features
 
-## 🗂️ Directory Structure
+- **Multi-Source Data Ingestion**: Scrapes and processes data from ASU's website, Reddit, and CSV files of ASU grades.
+- **Efficient Vector Storage**: Uses ChromaDB for fast, local vector storage and Qdrant for a scalable, production-ready cloud solution.
+- **Parallelized Data Processing**: Scripts are optimized to run in parallel, significantly speeding up data ingestion and embedding.
+- **RESTful API**: A Flask-based backend provides endpoints for querying the RAG system.
+- **Interactive Frontend**: A Next.js application for a user-friendly interface to interact with the RAG system.
+
+## Project Structure
 
 ```
-├── data/
-│   ├── raw/
-│   │   └── reddit/
-│   │       ├── 2025-07-24.jsonl                # Daily scrape
-│   │       └── historical/2025-07-24.jsonl    # Historical scrape
-│   └── processed/
-│       └── reddit_combined_2025-07-24.jsonl   # Combined, deduped
-│   └── vector_db/chroma.sqlite3               # ChromaDB
+.
+├── frontend/         # Next.js frontend application
 ├── scripts/
-│   ├── turbo_scrape.py
-│   ├── smart_scrape.py
-│   ├── historical_scrape.py
-│   ├── combine_and_embed_reddit.py
-│   ├── build_rag_optimized.py
-│   └── ...
+│   ├── data_processing/ # Scripts for processing raw data
+│   ├── deployment/      # Scripts for running the application
+│   ├── scraping/        # Scripts for web scraping
+│   ├── testing/         # Test scripts
+│   └── vector_db/       # Scripts for building the vector database
+├── src/
+│   ├── rag/             # Core RAG system logic
+│   ├── scrapers/        # Scraper implementations
+│   └── utils/           # Utility functions and data processors
+├── data/
+│   ├── raw/             # Raw, unprocessed data
+│   └── vector_db/       # Local ChromaDB storage
+└── ...
 ```
 
----
+## Getting Started
 
-## 🧑‍💻 **Scraping Scripts**
+### Prerequisites
 
-### 1. **Turbo Scraping** (max speed, all subreddits)
-```bash
-python scripts/turbo_scrape.py --workers 50 --limit 1000 --mode both
-```
-- `--mode daily` for just daily, `--mode historical` for just historical
-- `--workers` sets parallelism (use high value for powerful machines)
+- Python 3.10+
+- Node.js 18+
+- An OpenAI API key
 
-### 2. **Smart Scraping** (auto-detects what needs to run)
-```bash
-python scripts/smart_scrape.py --workers 32
-```
+### 1. Setup the Environment
 
-### 3. **Historical Scraping** (deep, periodic)
-```bash
-python scripts/historical_scrape.py --workers 20 --limit 1000
-```
-
----
-
-## 🧹 **Combining and Deduplicating Data**
-
-Combine daily and historical Reddit data, deduplicate by `id` (keep latest), and output a single file:
+Clone the repository and set up the Python virtual environment.
 
 ```bash
-python scripts/combine_and_embed_reddit.py \
-  --daily data/raw/reddit/2025-07-24.jsonl \
-  --historical data/raw/reddit/historical/2025-07-24.jsonl \
-  --out data/processed/reddit_combined_2025-07-24.jsonl \
-  --workers 48
+git clone <repository-url>
+cd new-llm-notebook
+python3 -m venv venv
+source venv/bin/activate
+pip install -r requirements.txt
 ```
-- This script will:
-  - Combine and deduplicate records
-  - Chunk and add conversation context
-  - Generate embeddings in parallel (fast!)
-  - Store all in ChromaDB
 
----
+Create a `.env` file in the root directory and add your OpenAI API key:
 
-## 🧠 **Embedding and Ingestion Pipeline**
+```
+OPENAI_API_KEY="your-openai-api-key"
+```
 
-- Uses `RAGOptimizedProcessor` for context-rich chunking
-- Embeds with OpenAI (parallelized)
-- Stores in ChromaDB with all relationships and metadata
+### 2. Scrape the Data
 
-**Best Practice:**
-- Always deduplicate by `id` before embedding
-- Use as many workers as your machine can handle for speed
+To populate the RAG system, you need to scrape the data sources.
 
----
+**Scrape Historical Data (run once):**
 
-## 🏛️ **ChromaDB Vector Store**
-- All embeddings and metadata are stored in `data/vector_db/chroma.sqlite3`
-- Metadata includes parent/child/thread relationships for context-aware retrieval
+This command scrapes all historical data. It's a long-running process that should only be done once.
 
----
+```bash
+python scripts/scraping/historical_scrape.py
+```
 
-## 📞 **Twilio SMS/WhatsApp Integration**
-- See `TWILIO_SETUP.md` for setup
-- Run `scripts/start_server.py` to launch the web/SMS/WhatsApp interface
+**Scrape Current Data:**
 
----
+To get the latest data, run the smart scraper, which intelligently fetches new information.
 
-## 📝 **Example Workflow**
+```bash
+python scripts/scraping/smart_scrape.py
+```
 
-1. **Scrape Reddit (turbo):**
-   ```bash
-   python scripts/turbo_scrape.py --workers 50 --limit 1000 --mode both
-   ```
-2. **Combine and embed:**
-   ```bash
-   python scripts/combine_and_embed_reddit.py \
-     --daily data/raw/reddit/2025-07-24.jsonl \
-     --historical data/raw/reddit/historical/2025-07-24.jsonl \
-     --out data/processed/reddit_combined_2025-07-24.jsonl \
-     --workers 48
-   ```
-3. **Start the server:**
-   ```bash
-   python scripts/start_server.py
-   ```
+### 3. Build the Vector Database
 
----
+After scraping the data, you need to process it and store it in the ChromaDB vector store. This script processes all raw data in parallel and generates embeddings.
 
-## ⚡ **Tips for Power Users**
-- Use high worker counts for scraping and embedding if you have a powerful CPU
-- Always deduplicate before embedding to avoid ChromaDB errors and double storage
-- For best RAG results, use the combined, context-rich, deduped file as your embedding source
+```bash
+python scripts/vector_db/build_chroma_db.py
+```
 
----
+This will create a `data/vector_db` directory containing the local ChromaDB.
 
-## 📚 **More**
-- See `SCRAPING_SCHEDULE.md` for cron job automation and advanced scheduling
-- See `build_rag_optimized.py` for advanced ingestion with quality scoring and ASU web data 
+### 4. Run the Application
+
+With the database built, you can now run the backend and frontend servers.
+
+**Start the Backend API:**
+
+```bash
+python scripts/deployment/start_api_server.py
+```
+
+The API will be available at `http://localhost:3000`.
+
+**Start the Frontend Application:**
+
+In a separate terminal, start the Next.js frontend.
+
+```bash
+cd frontend
+npm install
+npm run dev
+```
+
+The frontend will be running at `http://localhost:3001`.
+
+## Deployment
+
+This application is configured for deployment on Render. The `render.yaml` file is set up to:
+
+1.  Install production dependencies from `requirements-prod.txt`.
+2.  Build a Qdrant vector database using the optimized `scripts/vector_db/build_rag_qdrant_fast.py` script.
+3.  Start the production server using `scripts/deployment/start_production.py`.
+
+The API server is configured to use Qdrant when deployed on Render (by detecting the `RENDER` environment variable). 
