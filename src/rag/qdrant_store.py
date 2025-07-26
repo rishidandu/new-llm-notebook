@@ -84,13 +84,23 @@ class QdrantStore:
                 # Clean metadata
                 cleaned_metadata = self._clean_metadata_for_qdrant(doc.metadata)
                 
-                # Create point
+                # Create point with integer ID (Qdrant requirement)
+                try:
+                    # Try to convert string ID to integer, or use hash
+                    if isinstance(doc.id, str):
+                        point_id = hash(doc.id) % (2**63)  # Convert to positive int
+                    else:
+                        point_id = int(doc.id)
+                except:
+                    point_id = hash(str(doc.id)) % (2**63)
+                
                 point = PointStruct(
-                    id=doc.id,
+                    id=point_id,
                     vector=embedding,
                     payload={
                         'content': doc.content,
                         'source': doc.source,
+                        'original_id': doc.id,  # Keep original ID in payload
                         **cleaned_metadata
                     }
                 )

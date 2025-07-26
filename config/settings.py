@@ -16,7 +16,7 @@ class Config:
     
     # Qdrant Configuration
     QDRANT_API_KEY = os.getenv("QDRANT_API_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJhY2Nlc3MiOiJtIn0.d3YXRF1r12epzFORkWHzoAVtFhbpD8DipYTnKy6Hnws")
-    QDRANT_HOST = os.getenv("QDRANT_HOST", "https://your-cluster-url.qdrant.io")
+    QDRANT_HOST = os.getenv("QDRANT_HOST", "https://ea0b87f8-1ccf-4037-a9d9-21d76fdeca03.us-west-1-0.aws.cloud.qdrant.io")
     QDRANT_PORT = int(os.getenv("QDRANT_PORT", "6333"))
     
     # Twilio SMS Configuration
