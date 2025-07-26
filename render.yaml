@@ -5,7 +5,7 @@ services:
     plan: free
     buildCommand: |
       pip install -r requirements-prod.txt
-      python scripts/build_rag_render.py
+      python scripts/build_rag_optimized.py
     startCommand: python scripts/start_production.py
     healthCheckPath: /health
     envVars:
