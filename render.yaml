@@ -5,8 +5,8 @@ services:
     plan: free
     buildCommand: |
       pip install -r requirements-prod.txt
-      python scripts/build_rag_qdrant_fast.py
-    startCommand: python scripts/start_production.py
+      python scripts/vector_db/build_rag_qdrant_fast.py
+    startCommand: python scripts/deployment/start_production.py
     healthCheckPath: /health
     envVars:
       - key: OPENAI_API_KEY
